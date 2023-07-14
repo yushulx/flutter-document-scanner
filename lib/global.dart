@@ -42,7 +42,7 @@ class OverlayPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = colorOrange
-      ..strokeWidth = 5
+      ..strokeWidth = 15
       ..style = PaintingStyle.stroke;
 
     if (image != null) {
@@ -51,6 +51,7 @@ class OverlayPainter extends CustomPainter {
 
     Paint circlePaint = Paint()
       ..color = colorOrange
+      ..strokeWidth = 30
       ..style = PaintingStyle.fill;
 
     if (results == null) return;
@@ -62,10 +63,11 @@ class OverlayPainter extends CustomPainter {
       canvas.drawLine(result.points[3], result.points[0], paint);
 
       if (image != null) {
-        canvas.drawCircle(result.points[0], 10, circlePaint);
-        canvas.drawCircle(result.points[1], 10, circlePaint);
-        canvas.drawCircle(result.points[2], 10, circlePaint);
-        canvas.drawCircle(result.points[3], 10, circlePaint);
+        double radius = 40;
+        canvas.drawCircle(result.points[0], radius, circlePaint);
+        canvas.drawCircle(result.points[1], radius, circlePaint);
+        canvas.drawCircle(result.points[2], radius, circlePaint);
+        canvas.drawCircle(result.points[3], radius, circlePaint);
       }
     }
   }

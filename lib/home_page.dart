@@ -26,7 +26,13 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final picker = ImagePicker();
 
-  void openResultPage(DocumentData data) {
+  void openResultPage(DocumentData data, bool found) {
+    if (!found) {
+      SnackBar snackBar = const SnackBar(
+        content: Text('No document detected. Please edit it manually.'),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    }
     Navigator.push(
         context,
         MaterialPageRoute(
@@ -62,10 +68,27 @@ class _HomePageState extends State<HomePage> {
           ImagePixelFormat.IPF_ARGB_8888.index);
 
       if (results != null && results.isNotEmpty) {
-        openResultPage(DocumentData(
-          image: image,
-          documentResults: results,
-        ));
+        openResultPage(
+            DocumentData(
+              image: image,
+              documentResults: results,
+            ),
+            true);
+      } else {
+        double padding = 100;
+        List<Offset> points = <Offset>[
+          Offset(padding, padding),
+          Offset(image.width.toDouble() - padding, padding),
+          Offset(image.width.toDouble() - padding,
+              image.height.toDouble() - padding),
+          Offset(padding, image.height.toDouble() - padding)
+        ];
+        openResultPage(
+            DocumentData(
+              image: image,
+              documentResults: <DocumentResult>[DocumentResult(0, points, 0)],
+            ),
+            false);
       }
     }
   }

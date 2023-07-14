@@ -39,7 +39,7 @@ class _EditingPageState extends State<EditingPage> {
                   for (int j = 0; j < detectionResults[i].points.length; j++) {
                     if ((detectionResults[i].points[j] - details.localPosition)
                             .distance <
-                        20) {
+                        100) {
                       bool isCollided = false;
                       for (int index = 1; index < 4; index++) {
                         int otherIndex = (j + 1) % 4;
