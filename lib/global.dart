@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_document_scan_sdk/document_result.dart';
 import 'package:flutter_document_scan_sdk/flutter_document_scan_sdk.dart';
 import 'package:flutter_document_scan_sdk/template.dart';
+import 'dart:ui' as ui;
 
 FlutterDocumentScanSdk docScanner = FlutterDocumentScanSdk();
 bool isLicenseValid = false;
@@ -9,6 +10,7 @@ bool isLicenseValid = false;
 Future<int> initDocumentSDK() async {
   int? ret = await docScanner.init(
       'DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==');
+  if (ret == 0) isLicenseValid = true;
   await docScanner.setParameters(Template.color);
   return ret ?? -1;
 }
@@ -26,28 +28,44 @@ Widget createOverlay(
   List<DocumentResult>? documentResults,
 ) {
   return CustomPaint(
-    painter: OverlayPainter(documentResults),
+    painter: OverlayPainter(null, documentResults),
   );
 }
 
 class OverlayPainter extends CustomPainter {
-  List<DocumentResult>? documentResults;
+  ui.Image? image;
+  List<DocumentResult>? results;
 
-  OverlayPainter(this.documentResults);
+  OverlayPainter(this.image, this.results);
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.blue
+      ..color = colorOrange
       ..strokeWidth = 5
       ..style = PaintingStyle.stroke;
 
-    if (documentResults != null) {
-      for (var result in documentResults!) {
-        canvas.drawLine(result.points[0], result.points[1], paint);
-        canvas.drawLine(result.points[1], result.points[2], paint);
-        canvas.drawLine(result.points[2], result.points[3], paint);
-        canvas.drawLine(result.points[3], result.points[0], paint);
+    if (image != null) {
+      canvas.drawImage(image!, Offset.zero, paint);
+    }
+
+    Paint circlePaint = Paint()
+      ..color = colorOrange
+      ..style = PaintingStyle.fill;
+
+    if (results == null) return;
+
+    for (var result in results!) {
+      canvas.drawLine(result.points[0], result.points[1], paint);
+      canvas.drawLine(result.points[1], result.points[2], paint);
+      canvas.drawLine(result.points[2], result.points[3], paint);
+      canvas.drawLine(result.points[3], result.points[0], paint);
+
+      if (image != null) {
+        canvas.drawCircle(result.points[0], 10, circlePaint);
+        canvas.drawCircle(result.points[1], 10, circlePaint);
+        canvas.drawCircle(result.points[2], 10, circlePaint);
+        canvas.drawCircle(result.points[3], 10, circlePaint);
       }
     }
   }

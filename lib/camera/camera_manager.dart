@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_document_scan_sdk/document_result.dart';
 import 'package:flutter_document_scan_sdk/flutter_document_scan_sdk_platform_interface.dart';
 
+import '../data/document_data.dart';
 import '../global.dart';
 import 'dart:ui' as ui;
 import 'package:camera_platform_interface/camera_platform_interface.dart';
@@ -124,22 +125,26 @@ class CameraManager {
         _base = results[0];
       }
 
-      if (_baseIndex == 10 && results.isNotEmpty) {
+      if (isReadyToGo && results.isNotEmpty) {
         if (!isFinished) {
           isFinished = true;
 
           final data = await file.readAsBytes();
           ui.Image sourceImage = await decodeImageFromList(data);
-          ByteData? byteData =
-              await sourceImage.toByteData(format: ui.ImageByteFormat.rawRgba);
+          cbNavigation(DocumentData(
+            image: sourceImage,
+            documentResults: documentResults!,
+          ));
+          // ByteData? byteData =
+          //     await sourceImage.toByteData(format: ui.ImageByteFormat.rawRgba);
 
-          Uint8List bytes = byteData!.buffer.asUint8List();
-          int width = sourceImage.width;
-          int height = sourceImage.height;
-          int stride = byteData.lengthInBytes ~/ sourceImage.height;
-          int format = ImagePixelFormat.IPF_ARGB_8888.index;
-          handleDocument(
-              bytes, width, height, stride, format, documentResults![0].points);
+          // Uint8List bytes = byteData!.buffer.asUint8List();
+          // int width = sourceImage.width;
+          // int height = sourceImage.height;
+          // int stride = byteData.lengthInBytes ~/ sourceImage.height;
+          // int format = ImagePixelFormat.IPF_ARGB_8888.index;
+          // handleDocument(
+          //     bytes, width, height, stride, format, documentResults![0].points);
         }
       }
     }
@@ -158,7 +163,10 @@ class CameraManager {
         }
         decodeImageFromPixels(normalizedImage.data, normalizedImage.width,
             normalizedImage.height, pixelFormat, (ui.Image img) {
-          cbNavigation(img);
+          cbNavigation(DocumentData(
+            image: img,
+            documentResults: documentResults!,
+          ));
         });
       }
     });
@@ -206,7 +214,7 @@ class CameraManager {
         _base = results[0];
       }
 
-      if (_baseIndex == 10 && results.isNotEmpty) {
+      if (isReadyToGo && results.isNotEmpty) {
         if (!isFinished) {
           isFinished = true;
 
@@ -254,8 +262,18 @@ class CameraManager {
             }
           }
 
-          handleDocument(data, imageWidth, imageHeight, imageWidth * 4,
-              ImagePixelFormat.IPF_ARGB_8888.index, results[0].points);
+          PixelFormat pixelFormat = PixelFormat.rgba8888;
+          if (!kIsWeb && Platform.isIOS) {
+            pixelFormat = PixelFormat.bgra8888;
+          }
+          createImage(data, width, height, pixelFormat).then((image) {
+            cbNavigation(DocumentData(
+              image: image,
+              documentResults: documentResults!,
+            ));
+          });
+          // handleDocument(data, imageWidth, imageHeight, imageWidth * 4,
+          //     ImagePixelFormat.IPF_ARGB_8888.index, results[0].points);
         }
       }
 
@@ -409,9 +427,6 @@ class CameraManager {
   Future<void> toggleCamera(int index) async {
     // if (controller != null) controller!.dispose();
     ResolutionPreset preset = ResolutionPreset.high;
-    if (kIsWeb) {
-      preset = ResolutionPreset.medium;
-    }
     controller = CameraController(_cameras[index], preset);
     controller!.initialize().then((_) {
       if (!cbIsMounted()) {

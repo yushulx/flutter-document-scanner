@@ -1,11 +1,12 @@
 import 'dart:io';
 
+import 'package:documentscanner/data/document_data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_document_scan_sdk/document_result.dart';
 import 'package:flutter_document_scan_sdk/flutter_document_scan_sdk_platform_interface.dart';
 import 'package:flutter_exif_rotation/flutter_exif_rotation.dart';
 import 'package:url_launcher/url_launcher_string.dart';
-import 'result_page.dart';
+import 'editing_page.dart';
 import 'utils.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:image_picker/image_picker.dart';
@@ -25,11 +26,11 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final picker = ImagePicker();
 
-  void openResultPage(List<DocumentResult> documentResults) {
+  void openResultPage(DocumentData data) {
     Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => EditingPage(documentResults: documentResults),
+          builder: (context) => EditingPage(documentData: data),
         ));
   }
 
@@ -61,7 +62,10 @@ class _HomePageState extends State<HomePage> {
           ImagePixelFormat.IPF_ARGB_8888.index);
 
       if (results != null && results.isNotEmpty) {
-        openResultPage(results);
+        openResultPage(DocumentData(
+          image: image,
+          documentResults: results,
+        ));
       }
     }
   }
