@@ -33,6 +33,10 @@ https://github.com/yushulx/flutter-document-scanner/assets/2202306/cdcb4fd9-c1c9
     # flutter run -d edge
     # flutter run -d linux
     ```
-    
+## Known Issues
+The rectified images are converted to base64 strings and saved with [shared_preferences](https://pub.dev/packages/shared_preferences). When the total size of the images you're trying to save exceeds the size limitation of web local storage (typically around 5MB), it can lead to issues such as the app crashing or unexpected behavior.
+
+![web local storage size limitation](https://www.dynamsoft.com/codepool/img/2023/07/flutter-web-local-storage-limitation.png)
+
 ## Try Online Demo
 https://yushulx.me/flutter-document-scanner/
