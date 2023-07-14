@@ -30,8 +30,6 @@ class CameraManager {
   int cameraIndex = 0;
   bool isReadyToGo = false;
   bool _isWebFrameStarted = false;
-  DocumentResult? _base;
-  int _baseIndex = 0;
 
   CameraManager(
       {required this.context,
@@ -104,28 +102,7 @@ class CameraManager {
       documentResults = results;
       cbRefreshUi();
 
-      if (results == null) continue;
-      if (_base == null) {
-        _baseIndex += 1;
-        _base = results[0];
-      } else {
-        double previousArea = calculateArea(_base!.points[0], _base!.points[1],
-            _base!.points[2], _base!.points[3]);
-        double currentArea = calculateArea(results[0].points[0],
-            results[0].points[1], results[0].points[2], results[0].points[3]);
-        double diff = previousArea - currentArea > 0
-            ? previousArea - currentArea
-            : currentArea - previousArea;
-        if (diff / previousArea < 0.2) {
-          _baseIndex += 1;
-        } else {
-          _baseIndex = 1;
-        }
-
-        _base = results[0];
-      }
-
-      if (isReadyToGo && results.isNotEmpty) {
+      if (isReadyToGo && results != null && results.isNotEmpty) {
         if (!isFinished) {
           isFinished = true;
 
@@ -135,16 +112,6 @@ class CameraManager {
             image: sourceImage,
             documentResults: documentResults!,
           ));
-          // ByteData? byteData =
-          //     await sourceImage.toByteData(format: ui.ImageByteFormat.rawRgba);
-
-          // Uint8List bytes = byteData!.buffer.asUint8List();
-          // int width = sourceImage.width;
-          // int height = sourceImage.height;
-          // int stride = byteData.lengthInBytes ~/ sourceImage.height;
-          // int format = ImagePixelFormat.IPF_ARGB_8888.index;
-          // handleDocument(
-          //     bytes, width, height, stride, format, documentResults![0].points);
         }
       }
     }
@@ -194,25 +161,6 @@ class CameraManager {
 
       documentResults = results;
       cbRefreshUi();
-      if (_base == null) {
-        _baseIndex += 1;
-        _base = results[0];
-      } else {
-        double previousArea = calculateArea(_base!.points[0], _base!.points[1],
-            _base!.points[2], _base!.points[3]);
-        double currentArea = calculateArea(results[0].points[0],
-            results[0].points[1], results[0].points[2], results[0].points[3]);
-        double diff = previousArea - currentArea > 0
-            ? previousArea - currentArea
-            : currentArea - previousArea;
-        if (diff / previousArea < 0.2) {
-          _baseIndex += 1;
-        } else {
-          _baseIndex = 1;
-        }
-
-        _base = results[0];
-      }
 
       if (isReadyToGo && results.isNotEmpty) {
         if (!isFinished) {
@@ -266,14 +214,12 @@ class CameraManager {
           if (!kIsWeb && Platform.isIOS) {
             pixelFormat = PixelFormat.bgra8888;
           }
-          createImage(data, width, height, pixelFormat).then((image) {
+          createImage(data, imageWidth, imageHeight, pixelFormat).then((image) {
             cbNavigation(DocumentData(
               image: image,
               documentResults: documentResults!,
             ));
           });
-          // handleDocument(data, imageWidth, imageHeight, imageWidth * 4,
-          //     ImagePixelFormat.IPF_ARGB_8888.index, results[0].points);
         }
       }
 
@@ -380,15 +326,6 @@ class CameraManager {
     try {
       WidgetsFlutterBinding.ensureInitialized();
       _cameras = await availableCameras();
-      // int index = 0;
-
-      // for (; index < _cameras.length; index++) {
-      //   CameraDescription description = _cameras[index];
-      //   if (description.name.toLowerCase().contains('back')) {
-      //     _isMobileWeb = true;
-      //     break;
-      //   }
-      // }
       if (_cameras.isEmpty) return;
 
       if (!kIsWeb) {
@@ -413,19 +350,10 @@ class CameraManager {
       );
     }
 
-    // if (kIsWeb && !_isMobileWeb) {
-    //   return Transform(
-    //     alignment: Alignment.center,
-    //     transform: Matrix4.identity()..scale(-1.0, 1.0), // Flip horizontally
-    //     child: CameraPreview(controller!),
-    //   );
-    // }
-
     return CameraPreview(controller!);
   }
 
   Future<void> toggleCamera(int index) async {
-    // if (controller != null) controller!.dispose();
     ResolutionPreset preset = ResolutionPreset.high;
     controller = CameraController(_cameras[index], preset);
     controller!.initialize().then((_) {

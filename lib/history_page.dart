@@ -1,10 +1,10 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_document_scan_sdk/document_result.dart';
+import 'package:share_plus/share_plus.dart';
 import 'global.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'utils.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -15,8 +15,8 @@ class HistoryPage extends StatefulWidget {
 
 class _HistoryPageState extends State<HistoryPage> {
   bool _isLoaded = false;
-  final List<DocumentResult> _documentHistory =
-      List<DocumentResult>.empty(growable: true);
+  final List<Uint8List> _documentHistory =
+      List<Uint8List>.empty(growable: true);
   @override
   void initState() {
     super.initState();
@@ -24,19 +24,17 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   Future<void> loadHistory() async {
-    // final SharedPreferences prefs = await SharedPreferences.getInstance();
-    // var data = prefs.getStringList('document_data');
-    // if (data != null) {
-    //   _documentHistory.clear();
-    //   for (String json in data) {
-    //     DocumentResult documentResult =
-    //         DocumentResult.fromJson(jsonDecode(json));
-    //     _documentHistory.add(documentResult);
-    //   }
-    // }
-    // setState(() {
-    //   _isLoaded = true;
-    // });
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    var data = prefs.getStringList('document_data');
+    if (data != null) {
+      _documentHistory.clear();
+      for (String imageString in data) {
+        _documentHistory.add(decodeImageFromBase64(imageString));
+      }
+    }
+    setState(() {
+      _isLoaded = true;
+    });
   }
 
   @override
@@ -101,7 +99,7 @@ class _HistoryPageState extends State<HistoryPage> {
 }
 
 class MyCustomWidget extends StatelessWidget {
-  final DocumentResult result;
+  final Uint8List result;
   final Function cbDeleted;
   final Function cbOpenResultPage;
 
@@ -120,25 +118,13 @@ class MyCustomWidget extends StatelessWidget {
             padding: const EdgeInsets.only(top: 18, bottom: 16, left: 30),
             child: Row(
               children: [
-                // Column(
-                //   crossAxisAlignment: CrossAxisAlignment.start,
-                //   children: [
-                //     Text(
-                //       result.format,
-                //       style: const TextStyle(color: Colors.white),
-                //     ),
-                //     SizedBox(
-                //       width: MediaQuery.of(context).size.width - 105,
-                //       child: Text(
-                //         result.text,
-                //         style: TextStyle(
-                //             color: colorSubtitle,
-                //             fontSize: 14,
-                //             overflow: TextOverflow.ellipsis),
-                //       ),
-                //     ),
-                //   ],
-                // ),
+                SizedBox(
+                    width: 100.0,
+                    height: 100.0,
+                    child: Image.memory(
+                      result,
+                      fit: BoxFit.contain,
+                    )),
                 Expanded(child: Container()),
                 Padding(
                   padding: const EdgeInsets.only(right: 0),
@@ -170,23 +156,26 @@ class MyCustomWidget extends StatelessWidget {
                           const PopupMenuItem<int>(
                               value: 1,
                               child: Text(
-                                'Copy',
+                                'Share',
                                 style: TextStyle(color: Colors.white),
                               )),
                         ],
                       );
 
-                      // if (selected != null) {
-                      //   if (selected == 0) {
-                      //     // delete
-                      //     cbDeleted();
-                      //   } else if (selected == 1) {
-                      //     // copy
-                      //     Clipboard.setData(ClipboardData(
-                      //         text:
-                      //             'Format: ${result.format}, Text: ${result.text}'));
-                      //   }
-                      // }
+                      if (selected != null) {
+                        if (selected == 0) {
+                          // delete
+                          cbDeleted();
+                        } else if (selected == 1) {
+                          // share
+                          final XFile xFile = XFile.fromData(
+                            result,
+                            mimeType: 'image/png',
+                            name: 'image.png',
+                          );
+                          Share.shareXFiles([xFile], text: 'Image Shared');
+                        }
+                      }
                     },
                   ),
                 ),

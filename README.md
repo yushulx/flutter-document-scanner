@@ -1,16 +1,33 @@
-# documentscanner
+# Flutter Document Scanner
 
-A new Flutter project.
+A Flutter project that demonstrates how to use [Dynamsoft Document Normalizer](https://www.dynamsoft.com/document-normalizer/docs/core/introduction/?ver=latest&ver=latest) to rectify and enhance document images on Android, iOS, Windows, Linux, and web.
+
+## Supported Platforms
+- **Web**
+- **Android**
+- **iOS**
+- **Windows**
+- **Linux** (Without camera support)
 
 ## Getting Started
+1. Apply for a [30-day trial license](https://www.dynamsoft.com/customer/license/trialLicense/?product=ddn) and replace the license key in the `global.dart` file with your own:
 
-This project is a starting point for a Flutter application.
+    ```dart
+    Future<int> initDocumentSDK() async {
+        int? ret = await docScanner.init(
+            'LICENSE-KEY');
+        if (ret == 0) isLicenseValid = true;
+        await docScanner.setParameters(Template.color);
+        return ret ?? -1;
+    }
+    ```
 
-A few resources to get you started if this is your first Flutter project:
+2. Run the project:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+    ```
+    flutter run
+    # flutter run -d windows
+    # flutter run -d edge
+    # flutter run -d linux
+    ```
+    

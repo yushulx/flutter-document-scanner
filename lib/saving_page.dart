@@ -1,7 +1,6 @@
-import 'dart:io';
 import 'dart:ui';
 
-import 'package:documentscanner/global.dart';
+import 'global.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
@@ -11,7 +10,7 @@ import 'package:flutter_document_scan_sdk/flutter_document_scan_sdk_platform_int
 import 'package:flutter_document_scan_sdk/template.dart';
 import 'package:flutter_document_scan_sdk/normalized_image.dart';
 import 'dart:ui' as ui;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'data/document_data.dart';
@@ -150,6 +149,11 @@ class _SavingPageState extends State<SavingPage> {
     }
   }
 
+  void close() {
+    Navigator.pop(context);
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -160,15 +164,23 @@ class _SavingPageState extends State<SavingPage> {
           Padding(
             padding: const EdgeInsets.only(right: 20),
             child: ElevatedButton(
-              onPressed: () {
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(
-                //     builder: (context) => SavingPage(
-                //       documentData: widget.documentData,
-                //     ),
-                //   ),
-                // );
+              onPressed: () async {
+                String imageString =
+                    await convertImagetoPngBase64(normalizedUiImage!);
+
+                final SharedPreferences prefs =
+                    await SharedPreferences.getInstance();
+                var results = prefs.getStringList('document_data');
+                List<String> imageList = <String>[];
+                imageList.add(imageString);
+                if (results == null) {
+                  prefs.setStringList('document_data', imageList);
+                } else {
+                  results.addAll(imageList);
+                  prefs.setStringList('document_data', results);
+                }
+
+                close();
               },
               style: ButtonStyle(
                   backgroundColor: MaterialStateProperty.all(colorMainTheme)),

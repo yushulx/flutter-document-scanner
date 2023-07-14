@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -106,4 +107,18 @@ double calculateTriangleArea(Offset p1, Offset p2, Offset p3) {
 
 double distanceBetween(Offset p1, Offset p2) {
   return math.sqrt(math.pow(p2.dx - p1.dx, 2) + math.pow(p2.dy - p1.dy, 2));
+}
+
+Future<String> convertImagetoPngBase64(ui.Image image) async {
+  ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+  if (byteData == null) {
+    return '';
+  }
+  Uint8List pngBytes = byteData.buffer.asUint8List();
+  String bs64 = base64Encode(pngBytes);
+  return bs64;
+}
+
+Uint8List decodeImageFromBase64(String base64) {
+  return base64Decode(base64);
 }
