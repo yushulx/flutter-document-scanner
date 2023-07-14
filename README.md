@@ -31,3 +31,5 @@ A Flutter project that demonstrates how to use [Dynamsoft Document Normalizer](h
     # flutter run -d linux
     ```
     
+## Try Online Demo
+https://yushulx.me/flutter-document-scanner/
