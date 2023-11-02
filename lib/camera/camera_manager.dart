@@ -145,70 +145,18 @@ class CameraManager {
         .detectBuffer(bytes[0], width, height, strides[0], format)
         .then((results) {
       if (!cbIsMounted()) return;
-      // results = filterResults(results, width, height);
-      if (results == null || results.isEmpty) {
-        documentResults = results;
-        cbRefreshUi();
-        _isScanAvailable = true;
-        return;
-      }
-      if (MediaQuery.of(context).size.width <
-          MediaQuery.of(context).size.height) {
-        if (Platform.isAndroid) {
-          results = rotate90document(results, previewSize!.height.toInt());
-        }
-      }
 
       documentResults = results;
       cbRefreshUi();
+      _isScanAvailable = true;
 
-      if (isReadyToGo && results.isNotEmpty) {
+      if (isReadyToGo && results != null && results.isNotEmpty) {
         if (!isFinished) {
           isFinished = true;
 
           Uint8List data = bytes[0];
           int imageWidth = width;
           int imageHeight = height;
-
-          if (format == ImagePixelFormat.IPF_NV21.index) {
-            List<Uint8List> planes = [];
-            for (int planeIndex = 0; planeIndex < 3; planeIndex++) {
-              Uint8List buffer;
-              int planeWidth;
-              int planeHeight;
-              if (planeIndex == 0) {
-                planeWidth = width;
-                planeHeight = height;
-              } else {
-                planeWidth = width ~/ 2;
-                planeHeight = height ~/ 2;
-              }
-
-              buffer = Uint8List(planeWidth * planeHeight);
-
-              int pixelStride = pixelStrides[planeIndex];
-              int rowStride = strides[0];
-              int index = 0;
-              for (int i = 0; i < planeHeight; i++) {
-                for (int j = 0; j < planeWidth; j++) {
-                  buffer[index++] =
-                      bytes[planeIndex][i * rowStride + j * pixelStride];
-                }
-              }
-
-              planes.add(buffer);
-            }
-
-            data = yuv420ToRgba8888(planes, imageWidth, imageHeight);
-            if (MediaQuery.of(context).size.width <
-                MediaQuery.of(context).size.height) {
-              if (Platform.isAndroid) {
-                data = rotate90Degrees(data, imageWidth, imageHeight);
-                imageWidth = height;
-                imageHeight = width;
-              }
-            }
-          }
 
           PixelFormat pixelFormat = PixelFormat.rgba8888;
           if (!kIsWeb && Platform.isIOS) {
@@ -222,8 +170,6 @@ class CameraManager {
           });
         }
       }
-
-      _isScanAvailable = true;
     });
   }
 
@@ -252,25 +198,54 @@ class CameraManager {
       _isScanAvailable = false;
 
       if (Platform.isAndroid) {
+        int imageWidth = availableImage.width;
+        int imageHeight = availableImage.height;
+        List<Uint8List> planes = [];
+        Uint8List data;
+        if (format == ImagePixelFormat.IPF_NV21.index) {
+          for (int planeIndex = 0; planeIndex < 3; planeIndex++) {
+            Uint8List buffer;
+            int width;
+            int height;
+            if (planeIndex == 0) {
+              width = availableImage.width;
+              height = availableImage.height;
+            } else {
+              width = availableImage.width ~/ 2;
+              height = availableImage.height ~/ 2;
+            }
+
+            buffer = Uint8List(width * height);
+
+            int pixelStride = availableImage.planes[planeIndex].bytesPerPixel!;
+            int rowStride = availableImage.planes[planeIndex].bytesPerRow;
+            int index = 0;
+            for (int i = 0; i < height; i++) {
+              for (int j = 0; j < width; j++) {
+                buffer[index++] = availableImage
+                    .planes[planeIndex].bytes[i * rowStride + j * pixelStride];
+              }
+            }
+
+            planes.add(buffer);
+          }
+
+          data = yuv420ToRgba8888(planes, imageWidth, imageHeight);
+          format = ImagePixelFormat.IPF_ARGB_8888.index;
+          if (MediaQuery.of(context).size.width <
+              MediaQuery.of(context).size.height) {
+            if (Platform.isAndroid) {
+              data = rotate90Degrees(data, imageWidth, imageHeight);
+              imageWidth = availableImage.height;
+              imageHeight = availableImage.width;
+            }
+          }
+        } else {
+          data = availableImage.planes[0].bytes;
+        }
+
         processDocument(
-            [
-              availableImage.planes[0].bytes,
-              availableImage.planes[1].bytes,
-              availableImage.planes[2].bytes
-            ],
-            availableImage.width,
-            availableImage.height,
-            [
-              availableImage.planes[0].bytesPerRow,
-              availableImage.planes[1].bytesPerRow,
-              availableImage.planes[2].bytesPerRow
-            ],
-            format,
-            [
-              availableImage.planes[0].bytesPerPixel!,
-              availableImage.planes[1].bytesPerPixel!,
-              availableImage.planes[2].bytesPerPixel!
-            ]);
+            [data], imageWidth, imageHeight, [imageWidth * 4], format, []);
       } else if (Platform.isIOS) {
         processDocument(
             [availableImage.planes[0].bytes],
