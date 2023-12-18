@@ -27,13 +27,13 @@ void showAlert(BuildContext context, String title, String content) {
   );
 }
 
-Future<ui.Image> createImage(
-    Uint8List buffer, int width, int height, ui.PixelFormat pixelFormat) {
+Future<ui.Image> createImage(Uint8List buffer, int width, int height,
+    ui.PixelFormat pixelFormat, int stride) {
   final Completer<ui.Image> completer = Completer();
 
   ui.decodeImageFromPixels(buffer, width, height, pixelFormat, (ui.Image img) {
     completer.complete(img);
-  });
+  }, rowBytes: stride);
 
   return completer.future;
 }

@@ -162,7 +162,8 @@ class CameraManager {
           if (!kIsWeb && Platform.isIOS) {
             pixelFormat = PixelFormat.bgra8888;
           }
-          createImage(data, imageWidth, imageHeight, pixelFormat).then((image) {
+          createImage(data, imageWidth, imageHeight, pixelFormat, strides[0])
+              .then((image) {
             cbNavigation(DocumentData(
               image: image,
               documentResults: documentResults!,
